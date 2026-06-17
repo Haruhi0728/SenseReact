@@ -37,10 +37,10 @@
 // 設定値（変更が必要な場合はここを編集する）
 // ========================================================
 
-// 撮影解像度（まず確実に動くQVGAで設定）
-// 動作確認後に変更: CAM_IMGSIZE_VGA_H/V（640x480）、CAM_IMGSIZE_HD_H/V（1280x720）
-const int IMG_WIDTH  = CAM_IMGSIZE_QVGA_H;  // 320ピクセル
-const int IMG_HEIGHT = CAM_IMGSIZE_QVGA_V;  // 240ピクセル
+// 撮影解像度（QVGAで動作確認済み → VGAに引き上げ）
+// さらに上げる場合: CAM_IMGSIZE_HD_H/V（1280x720）、CAM_IMGSIZE_QUADVGA_H/V（1280x960）
+const int IMG_WIDTH  = CAM_IMGSIZE_VGA_H;  // 640ピクセル
+const int IMG_HEIGHT = CAM_IMGSIZE_VGA_V;  // 480ピクセル
 
 // 画像フォーマット（JPEGが最も標準的で確認しやすい）
 const CAM_IMAGE_PIX_FMT IMG_FORMAT = CAM_IMAGE_PIX_FMT_JPG;
