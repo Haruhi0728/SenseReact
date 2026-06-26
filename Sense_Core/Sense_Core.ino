@@ -165,5 +165,13 @@ void loop() {
   else if (realDetect)  Serial.println("●対象を検知");
   else                  Serial.println("静観");
 
+  // 機械可読CSV（ダッシュボード用）: $距離,振動%,腕dps,画面変化%,検知0/1
+  Serial.print("$");
+  Serial.print(d < 0 ? -1 : (int)d);      Serial.print(",");
+  Serial.print(vib);                      Serial.print(",");
+  Serial.print(arm < 0 ? 0 : (int)arm);   Serial.print(",");
+  Serial.print(chg);                      Serial.print(",");
+  Serial.println(realDetect ? 1 : 0);
+
   delay(80);
 }

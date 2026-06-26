@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SenseReact ダッシュボード</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#11111b;color:#cdd6f4;
+       font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  h1{font-size:18px;text-align:center;padding:14px;margin:0;color:#cba6f7}
+  .wrap{max-width:540px;margin:0 auto;padding:12px}
+  .status{padding:20px;border-radius:14px;text-align:center;font-size:22px;
+          font-weight:bold;margin-bottom:14px;background:#313244;
+          transition:background .15s,color .15s}
+  .status.on{background:#a6e3a1;color:#11111b}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card{background:#1e1e2e;border:1px solid #313244;border-radius:14px;padding:14px}
+  .label{font-size:12px;color:#a6adc8}
+  .val{font-size:28px;font-weight:bold;margin:4px 0}
+  .val small{font-size:13px;color:#a6adc8;font-weight:normal}
+  .bar{height:10px;background:#313244;border-radius:6px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;border-radius:6px;transition:width .12s linear}
+  .b-dist > i{background:#89dceb}
+  .b-vib  > i{background:#cba6f7}
+  .b-arm  > i{background:#fab387}
+  .b-chg  > i{background:#f38ba8}
+  .sub{font-size:12px;color:#6c7086;margin-top:6px}
+  .sub.move{color:#fab387}
+</style>
+</head>
+<body>
+  <h1>SenseReact ダッシュボード</h1>
+  <div class="wrap">
+    <div id="status" class="status">— 接続待ち —</div>
+    <div class="grid">
+      <div class="card">
+        <div class="label">距離（前方）</div>
+        <div class="val"><span id="dist">--</span> <small>cm</small></div>
+        <div class="bar b-dist"><i id="dist-bar"></i></div>
+      </div>
+      <div class="card">
+        <div class="label">振動の強さ</div>
+        <div class="val"><span id="vib">0</span><small>%</small></div>
+        <div class="bar b-vib"><i id="vib-bar"></i></div>
+      </div>
+      <div class="card">
+        <div class="label">腕の動き</div>
+        <div class="val"><span id="arm">0</span> <small>dps</small></div>
+        <div class="bar b-arm"><i id="arm-bar"></i></div>
+        <div class="sub" id="arm-state">静止</div>
+      </div>
+      <div class="card">
+        <div class="label">画面変化</div>
+        <div class="val"><span id="chg">0</span><small>%</small></div>
+        <div class="bar b-chg"><i id="chg-bar"></i></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+function setBar(id, pct){
+  pct = Math.max(0, Math.min(100, pct));
+  document.getElementById(id).style.width = pct + "%";
+}
+
+async function tick(){
+  try{
+    const r = await fetch("/data?t=" + Date.now(), {cache:"no-store"});
+    const d = await r.json();
+
+    // 距離（近いほどバーが伸びる）
+    const distEl = document.getElementById("dist");
+    if(d.dist === null){ distEl.textContent = "範囲外"; setBar("dist-bar", 0); }
+    else { distEl.textContent = d.dist; setBar("dist-bar", (1 - d.dist/40)*100); }
+
+    // 振動
+    document.getElementById("vib").textContent = d.vib;
+    setBar("vib-bar", d.vib);
+
+    // 腕の動き
+    document.getElementById("arm").textContent = d.arm;
+    setBar("arm-bar", d.arm/2);
+    const moving = d.arm > 30;
+    const st = document.getElementById("arm-state");
+    st.textContent = moving ? "動いてる" : "静止";
+    st.className = "sub" + (moving ? " move" : "");
+
+    // 画面変化
+    document.getElementById("chg").textContent = d.chg;
+    setBar("chg-bar", d.chg*4);
+
+    // 判定ランプ
+    const s = document.getElementById("status");
+    if(d.detect){ s.textContent = "● 対象を検知"; s.classList.add("on"); }
+    else { s.textContent = moving ? "自分の動き（無視）" : "静観中"; s.classList.remove("on"); }
+  }catch(e){
+    document.getElementById("status").textContent = "— 接続待ち —";
+  }
+}
+setInterval(tick, 150);
+tick();
+</script>
+</body>
+</html>

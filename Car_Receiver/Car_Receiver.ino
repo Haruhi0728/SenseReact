@@ -1,17 +1,19 @@
 /**
  * Car_Receiver.ino  （車体側 ESP32）
  *
- * ESP-NOWで受け取った左右の速度指令で、連続回転サーボを回す。
+ * ESP-NOWで受け取った左右の速度指令で、連続回転サーボ4個を回す。
  * 差動駆動：left/right それぞれ -100〜100（%）。
  *
  * 【配線】
- *   左サーボ 信号 → GPIO13（左2個なら信号を分岐して両方へ）
- *   右サーボ 信号 → GPIO14
- *   サーボ VCC   → 電池+（4個なら必ず外部電池。1個テストならESP32の5V/VINでも可）
- *   サーボ GND   → 電池− かつ ESP32 GND（共通必須）
+ *   GPIO13 → 左前サーボ
+ *   GPIO14 → 左後サーボ
+ *   GPIO25 → 右前サーボ
+ *   GPIO26 → 右後サーボ
+ *   サーボ VCC → 外部電池+（必須。ESP32の5Vでは電流不足）
+ *   サーボ GND → 電池− かつ ESP32 GND（共通必須）
  *
  * 【安全】
- *   500msメッセージが来なければ自動停止（フェイルセーフ）。
+ *   500ms メッセージが来なければ自動停止（フェイルセーフ）。
  */
 
 #include <esp_now.h>
@@ -23,19 +25,26 @@ typedef struct {
   int16_t right;
 } DriveCmd;
 
-const int PIN_L = 13;
-const int PIN_R = 14;
+const int PIN_FL = 13;
+const int PIN_RL = 14;
+const int PIN_FR = 25;
+const int PIN_RR = 26;
 
-Servo servoL, servoR;
+Servo servoFL, servoRL, servoFR, servoRR;
 
 volatile int16_t curL = 0, curR = 0;
 volatile unsigned long lastRecv = 0;
 
-// 速度(%) → 連続回転サーボのマイクロ秒
-// READMEのサーボ値に合わせる：停止1500 / 全開2500（逆転は対称で500）
 int toUs(int speed) {
   speed = constrain(speed, -100, 100);
   return 1500 + speed * 10;  // -100→500, 0→1500, 100→2500
+}
+
+void stopAll() {
+  servoFL.writeMicroseconds(1500);
+  servoRL.writeMicroseconds(1500);
+  servoFR.writeMicroseconds(1500);
+  servoRR.writeMicroseconds(1500);
 }
 
 void onRecv(const esp_now_recv_info_t *info, const uint8_t *data, int len) {
@@ -52,10 +61,11 @@ void setup() {
   Serial.begin(115200);
   delay(300);
 
-  servoL.attach(PIN_L, 500, 2500);   // 500〜2500μs（READMEの全開2500に対応）
-  servoR.attach(PIN_R, 500, 2500);
-  servoL.writeMicroseconds(1500);  // 停止
-  servoR.writeMicroseconds(1500);
+  servoFL.attach(PIN_FL, 500, 2500);
+  servoRL.attach(PIN_RL, 500, 2500);
+  servoFR.attach(PIN_FR, 500, 2500);
+  servoRR.attach(PIN_RR, 500, 2500);
+  stopAll();
 
   WiFi.mode(WIFI_STA);
   Serial.print("車体 MAC: ");
@@ -70,12 +80,13 @@ void setup() {
 
 void loop() {
   if (millis() - lastRecv > 500) {
-    // 信号途絶 → 安全停止
-    servoL.writeMicroseconds(1500);
-    servoR.writeMicroseconds(1500);
+    stopAll();
   } else {
-    servoL.writeMicroseconds(toUs(curL));
-    servoR.writeMicroseconds(toUs(curR));
+    // 左側：正転、右側：逆転（取り付け向きが逆のため）
+    servoFL.writeMicroseconds(toUs( curL));
+    servoRL.writeMicroseconds(toUs( curL));
+    servoFR.writeMicroseconds(toUs(-curR));
+    servoRR.writeMicroseconds(toUs(-curR));
   }
   delay(20);
 }
