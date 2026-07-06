@@ -24,3 +24,6 @@ $RECYCLE.BIN/
 
 # macOS（チームにMacユーザーがいる場合の対策）
 .DS_Store
+
+# WiFiパスワード
+**/secrets.h

@@ -10,7 +10,8 @@
 #include <WiFi.h>
 
 // ブロードキャストアドレス（全ESP32宛て）
-uint8_t broadcastAddr[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+// uint8_t broadcastAddr[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t broadcastAddr[] = {0xFC, 0xF5, 0xC4, 0x1A, 0x47, 0xDC};
 int count = 0;
 
 void setup() {
@@ -29,7 +30,7 @@ void setup() {
   // ブロードキャストを peer として登録
   esp_now_peer_info_t peer = {};
   memcpy(peer.peer_addr, broadcastAddr, 6);
-  peer.channel = 0;      // 現在のチャンネル
+  peer.channel = 1;      // 現在のチャンネル
   peer.encrypt = false;
   if (esp_now_add_peer(&peer) != ESP_OK) {
     Serial.println("peer 追加失敗");

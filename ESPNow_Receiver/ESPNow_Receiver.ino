@@ -30,6 +30,9 @@ void setup() {
   delay(300);
 
   WiFi.mode(WIFI_STA);
+
+  WiFi.printDiag(Serial);
+  
   Serial.print("受信側 MAC: ");
   Serial.println(WiFi.macAddress());
 
