@@ -31,7 +31,7 @@
 // SPRESENSE D01(TX) → ESP32 GPIO16(RX2)
 // ESP32 TX2(GPIO17) は今回は未使用でもOK
 const int UART_BAUD = 921600;
-const int ESP32_RX2 = 16;
+const int ESP32_RX2 = 15;
 const int ESP32_TX2 = 17;
 
 HardwareSerial SpresenseSerial(2);
